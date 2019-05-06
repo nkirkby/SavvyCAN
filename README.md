@@ -71,6 +71,10 @@ Now run SavvyCAN
 ./SavvyCAN
 ```
 
+### What to do if `qmake` fails with error `Project ERROR: Unknown module(s) in QT: qml serialbus help`? :
+
+`sudo apt install libqt5serialbus5-dev qtdeclarative5-dev qttools5-dev`
+
 ## What to do if your compile failed?
 
 The very first thing to do is try:
