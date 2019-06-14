@@ -1410,7 +1410,6 @@ DBCFile* DBCHandler::loadDBCFile(int idx)
 {
    if (idx > -1 && idx < loadedFiles.count()) removeDBCFile(idx);
 
-    const QString PREVIOUS_LOAD_DIR_KEY("DBC/PreviousLoadDirectory");
     QString filename;
     QFileDialog dialog;
     QSettings settings;
@@ -1431,6 +1430,7 @@ DBCFile* DBCHandler::loadDBCFile(int idx)
         newFile.loadFile(filename);
         loadedFiles.append(newFile);
         settings.setValue(PREVIOUS_LOAD_DIR_KEY, dialog.directory().path());
+        writeCurrentlyLoadedFilesToSettings();
         return &loadedFiles.last();
     }
 
@@ -1443,11 +1443,48 @@ void DBCHandler::removeDBCFile(int idx)
     if (idx < 0) return;
     if (idx >= loadedFiles.count()) return;
     loadedFiles.removeAt(idx);
+    writeCurrentlyLoadedFilesToSettings();
 }
 
 void DBCHandler::removeAllFiles()
 {
     loadedFiles.clear();
+    writeCurrentlyLoadedFilesToSettings();
+}
+
+void DBCHandler::writeCurrentlyLoadedFilesToSettings()
+{
+    QSettings settings;
+    settings.remove(LOADED_FILENAMES_KEY);
+    settings.beginWriteArray(LOADED_FILENAMES_KEY);
+    for (int i = 0; i < loadedFiles.count(); i++)
+    {
+        settings.setArrayIndex(i);
+        settings.setValue("filename", loadedFiles[i].getFullFilename());
+        settings.setValue("bus", loadedFiles[i].getAssocBus());
+    }
+    settings.endArray();
+}
+
+void DBCHandler::loadPreviouslyLoadedFilesFromSettings()
+{
+    QSettings settings;
+    const int size = settings.beginReadArray(LOADED_FILENAMES_KEY);
+    qDebug() << "found " << size << " files in settings";
+    for (int i = 0; i < size; i++)
+    {
+        settings.setArrayIndex(i);
+        DBCFile dbcFile;
+        QFile file(settings.value("filename").toString());
+        if (file.exists())
+        {
+            qDebug() << "file " << file.fileName() << " exists";
+            dbcFile.loadFile(file.fileName());
+            dbcFile.setAssocBus(settings.value("bus", -1).toInt());
+            loadedFiles.append(dbcFile);
+        }
+    }
+    settings.endArray();
 }
 
 void DBCHandler::swapFiles(int pos1, int pos2)
@@ -1459,6 +1496,7 @@ void DBCHandler::swapFiles(int pos1, int pos2)
     if (pos2 >= loadedFiles.count()) return;
 
     loadedFiles.swap(pos1, pos2);
+    writeCurrentlyLoadedFilesToSettings();
 }
 
 /*
@@ -1523,7 +1561,7 @@ DBCFile* DBCHandler::getFileByName(QString name)
 
 DBCHandler::DBCHandler()
 {
-
+    loadPreviouslyLoadedFilesFromSettings();
 }
 
 DBCHandler* DBCHandler::getReference()

@@ -40,6 +40,8 @@ DBCLoadSaveWindow::DBCLoadSaveWindow(const QVector<CANFrame> *frames, QWidget *p
     currentlyEditingFile = nullptr;
 
     installEventFilter(this);
+    for (int i = 0; i < dbcHandler->getFileCount(); i++)
+        makeRowForFile(*dbcHandler->getFileByIdx(i));
 }
 
 DBCLoadSaveWindow::~DBCLoadSaveWindow()
@@ -47,6 +49,27 @@ DBCLoadSaveWindow::~DBCLoadSaveWindow()
     removeEventFilter(this);
     delete ui;
 }
+
+void DBCLoadSaveWindow::makeRowForFile(DBCFile &file)
+{
+    int idx = ui->tableFiles->rowCount();
+    ui->tableFiles->insertRow(ui->tableFiles->rowCount());
+    ui->tableFiles->setItem(idx, 0, new QTableWidgetItem(file.getFullFilename()));
+    ui->tableFiles->setItem(idx, 1, new QTableWidgetItem("-1"));
+    DBC_ATTRIBUTE *attr = file.findAttributeByName("isj1939dbc");
+    QTableWidgetItem *item = new QTableWidgetItem("");
+    ui->tableFiles->setItem(idx, 2, item);
+    if (attr && attr->defaultValue > 0)
+    {
+        item->setCheckState(Qt::Checked);
+    }
+    else
+    {
+        item->setCheckState(Qt::Unchecked);
+    }
+
+}
+
 
 bool DBCLoadSaveWindow::eventFilter(QObject *obj, QEvent *event)
 {
@@ -83,21 +106,7 @@ void DBCLoadSaveWindow::loadFile()
 {
     DBCFile *file = dbcHandler->loadDBCFile(-1);
     if(file) {
-        int idx = ui->tableFiles->rowCount();
-        ui->tableFiles->insertRow(ui->tableFiles->rowCount());
-        ui->tableFiles->setItem(idx, 0, new QTableWidgetItem(file->getFullFilename()));
-        ui->tableFiles->setItem(idx, 1, new QTableWidgetItem("-1"));
-        DBC_ATTRIBUTE *attr = file->findAttributeByName("isj1939dbc");
-        QTableWidgetItem *item = new QTableWidgetItem("");
-        ui->tableFiles->setItem(idx, 2, item);
-        if (attr && attr->defaultValue > 0)
-        {
-            item->setCheckState(Qt::Checked);
-        }
-        else
-        {
-            item->setCheckState(Qt::Unchecked);
-        }
+        makeRowForFile(*file);
     }
 }
 

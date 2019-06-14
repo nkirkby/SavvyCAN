@@ -108,6 +108,10 @@ private:
 
     DBCHandler();
     static DBCHandler *instance;
+    const QString PREVIOUS_LOAD_DIR_KEY = QString("DBC/PreviousLoadDirectory");
+    const QString LOADED_FILENAMES_KEY = QString("DBC/LoadedFilenames");
+    void loadPreviouslyLoadedFilesFromSettings();
+    void writeCurrentlyLoadedFilesToSettings();
 };
 
 #endif // DBCHANDLER_H

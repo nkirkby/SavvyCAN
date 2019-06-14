@@ -37,6 +37,7 @@ private:
     DBCMainEditor *editorWindow;
     bool inhibitCellProcessing;
 
+    void makeRowForFile(DBCFile &file);
     void swapTableRows(bool up);
     QList<QTableWidgetItem*> takeRow(int row);
     void setRow(int row, const QList<QTableWidgetItem*>& rowItems);
